@@ -64,3 +64,12 @@ Path to list.
 
 - scp-mkdir   
  Create new directory
+
+# Reference
+https://github.com/nopnop2002/esp-idf-ssh-client
+
+You can use scp and ssh to do heavy processing that esp32 alone cannot.  
+- Execute server-side command with ssh.   
+- Output the processing result to a file.   
+- Copy file from server using scp-get.   
+
