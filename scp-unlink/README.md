@@ -1,5 +1,5 @@
-# scp-get 
-Get from a file using ssh connection
+# scp-unlink 
+Unlink a file using ssh connection
 
 # Installation
 
@@ -9,12 +9,11 @@ cd esp-idf-scp-client
 git clone https://github.com/libssh2/libssh2 components/libssh2
 cp esp-idf/libssh2_config.h components/libssh2/include
 cp esp-idf/CMakeLists.txt components/libssh2
-cd scp-get
+cd scp-unlink
 idf.py set-target {esp32/esp32s2/esp32s3/esp32c3}
 idf.py menuconfig
 idf.py flash
 ```
 
-![config-get](https://user-images.githubusercontent.com/6020549/166656502-d308958b-c11e-4a19-9d73-117bee73a180.jpg)
-
+![config-unlink](https://user-images.githubusercontent.com/6020549/166658815-6e100462-3226-4720-96ca-19f90f62f95d.jpg)
 

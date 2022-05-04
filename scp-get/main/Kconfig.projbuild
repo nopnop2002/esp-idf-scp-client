@@ -17,7 +17,6 @@ menu "Application Configuration"
 		default 5
 		help
 			Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
-
 	
 	config SSH_USER
 		string "SSH Username"
@@ -33,10 +32,15 @@ menu "Application Configuration"
 
 	config SSH_HOST
 		string "SSH Host"
-		default "192.168.10.10"
+		default "ssh-host.local"
 		help
-			IP address of SSH host.
-			mDMS name cannot be used.
+			IP address or mDNS of SSH host.
+
+	config SSH_PORT
+		int "SSH Port"
+		default 22
+		help
+			Port number of SSH server.
 
 	config SSH_FILE_PATH
 		string "File path to get"

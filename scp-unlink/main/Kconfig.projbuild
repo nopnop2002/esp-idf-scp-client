@@ -17,7 +17,7 @@ menu "Application Configuration"
 		default 5
 		help
 			Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
-
+	
 	config SSH_USER
 		string "SSH Username"
 		default "ssh-user"
@@ -43,9 +43,9 @@ menu "Application Configuration"
 			Port number of SSH server.
 
 	config SSH_PATH
-		string "Path to list"
-		default "/tmp"
+		string "Path to unlink"
+		default "/tmp/scp-put.txt"
 		help
-			Path to list.
+			Path to unlink.
 
 endmenu

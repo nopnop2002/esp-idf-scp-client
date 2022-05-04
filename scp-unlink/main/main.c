@@ -44,7 +44,7 @@ static EventGroupHandle_t s_wifi_event_group;
  * - we are connected to the AP with an IP
  * - we failed to connect after the maximum amount of retries */
 #define WIFI_CONNECTED_BIT BIT0
-#define WIFI_FAIL_BIT	BIT1
+#define WIFI_FAIL_BIT BIT1
 
 static const char *TAG = "MAIN";
 
@@ -87,15 +87,15 @@ void wifi_init_sta(void)
 	esp_event_handler_instance_t instance_any_id;
 	esp_event_handler_instance_t instance_got_ip;
 	ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-									ESP_EVENT_ANY_ID,
-									&event_handler,
-									NULL,
-									&instance_any_id));
+														ESP_EVENT_ANY_ID,
+														&event_handler,
+														NULL,
+														&instance_any_id));
 	ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
-									IP_EVENT_STA_GOT_IP,
-									&event_handler,
-									NULL,
-									&instance_got_ip));
+														IP_EVENT_STA_GOT_IP,
+														&event_handler,
+														NULL,
+														&instance_got_ip));
 
 	wifi_config_t wifi_config = {
 		.sta = {
@@ -104,7 +104,7 @@ void wifi_init_sta(void)
 			/* Setting a password implies station will connect to all security modes including WEP/WPA.
 			 * However these modes are deprecated and not advisable to be used. Incase your Access point
 			 * doesn't support WPA2, these mode can be enabled by commenting below line */
-			.threshold.authmode = WIFI_AUTH_WPA2_PSK,
+		 .threshold.authmode = WIFI_AUTH_WPA2_PSK,
 
 			.pmf_cfg = {
 				.capable = true,
@@ -121,17 +121,19 @@ void wifi_init_sta(void)
 	/* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
 	 * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
 	EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
-		WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-		pdFALSE,
-		pdFALSE,
-		portMAX_DELAY);
+			WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+			pdFALSE,
+			pdFALSE,
+			portMAX_DELAY);
 
 	/* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
 	 * happened. */
 	if (bits & WIFI_CONNECTED_BIT) {
-		ESP_LOGI(TAG, "connected to ap SSID:%s", CONFIG_ESP_WIFI_SSID);
+		ESP_LOGI(TAG, "connected to ap SSID:%s",
+				 CONFIG_ESP_WIFI_SSID);
 	} else if (bits & WIFI_FAIL_BIT) {
-		ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
+		ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
+				 CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
 	} else {
 		ESP_LOGE(TAG, "UNEXPECTED EVENT");
 	}
@@ -141,8 +143,6 @@ void wifi_init_sta(void)
 	ESP_ERROR_CHECK(esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, instance_any_id));
 	vEventGroupDelete(s_wifi_event_group);
 }
-
-#define __FILESIZE "llu"
 
 void app_main(void)
 {
@@ -163,7 +163,7 @@ void app_main(void)
 	const char *fingerprint;
 	LIBSSH2_SESSION *session;
 	LIBSSH2_SFTP *sftp_session;
-	LIBSSH2_SFTP_HANDLE *sftp_handle;
+	LIBSSH2_SFTP_ATTRIBUTES sftp_attr;
 
 	ESP_LOGI(TAG, "libssh2_version is %s", LIBSSH2_VERSION);
 	int rc = libssh2_init(0);
@@ -248,58 +248,22 @@ void app_main(void)
 	/* Since we have not set non-blocking, tell libssh2 we are blocking */
 	libssh2_session_set_blocking(session, 1);
 
-	/* Request a dir listing via SFTP */
+	/* Make a directory via SFTP */
 	ESP_LOGI(TAG, "remote path=[%s]", CONFIG_SSH_PATH);
-	sftp_handle = libssh2_sftp_opendir(sftp_session, CONFIG_SSH_PATH);
-	if(!sftp_handle) {
-		ESP_LOGE(TAG, "Unable to open dir with SFTP");
-		while(1) { vTaskDelay(1); }
+	int stat = libssh2_sftp_stat(sftp_session, CONFIG_SSH_PATH, &sftp_attr);
+	ESP_LOGI(TAG, "libssh2_sftp_stat=%d", stat);
+
+	if (stat == 0) {
+		rc = libssh2_sftp_unlink(sftp_session, CONFIG_SSH_PATH);
+		if(rc) {
+			ESP_LOGE(TAG, "libssh2_sftp_rmdir failed: %d", rc);
+		} else {
+			ESP_LOGI(TAG, "%s unlink", CONFIG_SSH_PATH);
+		}
+	} else {
+		ESP_LOGW(TAG, "%s is not exist", CONFIG_SSH_PATH);
 	}
 
-	ESP_LOGI(TAG, "libssh2_sftp_opendir() is done, now receive listing!");
-	do {
-		char mem[512];
-		char longentry[512];
-		LIBSSH2_SFTP_ATTRIBUTES attrs;
-
-		/* loop until we fail */
-		rc = libssh2_sftp_readdir_ex(sftp_handle, mem, sizeof(mem),
-									 longentry, sizeof(longentry), &attrs);
-		if(rc > 0) {
-			/* rc is the length of the file name in the mem buffer */
-
-			if(longentry[0] != '\0') {
-				printf("%s\n", longentry);
-			}
-			else {
-				if(attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS) {
-					/* this should check what permissions it is and print the output accordingly */
-					printf("--fix----- ");
-				}
-				else {
-					printf("---------- ");
-				}
-
-				if(attrs.flags & LIBSSH2_SFTP_ATTR_UIDGID) {
-					printf("%4d %4d ", (int) attrs.uid, (int) attrs.gid);
-				}
-				else {
-					printf("	 -	- ");
-				}
-
-				if(attrs.flags & LIBSSH2_SFTP_ATTR_SIZE) {
-					printf("%8" __FILESIZE " ", attrs.filesize);
-				}
-
-				printf("%s\n", mem);
-			}
-		}
-		else
-			break;
-
-	} while(1);
-
-	libssh2_sftp_closedir(sftp_handle);
 	libssh2_sftp_shutdown(sftp_session);
 
 	// Close a session

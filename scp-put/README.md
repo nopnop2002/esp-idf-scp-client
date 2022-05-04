@@ -1,31 +1,19 @@
 # scp-put 
-Put to a file
+Put to a file using ssh connection
 
-# Installation for ESP32
+# Installation
 
 ```
 git clone https://github.com/nopnop2002/esp-idf-scp-client
-cd esp-idf-scp-client/scp-put
+cd esp-idf-scp-client
 git clone https://github.com/libssh2/libssh2 components/libssh2
 cp esp-idf/libssh2_config.h components/libssh2/include
 cp esp-idf/CMakeLists.txt components/libssh2
-idf.py set-target esp32
+cd scp-put
+idf.py set-target {esp32/esp32s2/esp32s3/esp32c3}
 idf.py menuconfig
 idf.py flash
 ```
 
-# Installation for ESP32-S2
-
-```
-git clone https://github.com/nopnop2002/esp-idf-scp-client
-cd esp-idf-scp-client/scp-put
-git clone https://github.com/libssh2/libssh2 components/libssh2
-cp esp-idf/libssh2_config.h components/libssh2/include
-cp esp-idf/CMakeLists.txt components/libssh2
-idf.py set-target esp32s2
-idf.py menuconfig
-idf.py flash
-```
-
-![config-put](https://user-images.githubusercontent.com/6020549/119905119-90c0a800-bf86-11eb-9071-8bf6742a1f87.jpg)
+![config-put](https://user-images.githubusercontent.com/6020549/166657389-99d07297-002e-4c27-9a89-480c49514ad9.jpg)
 

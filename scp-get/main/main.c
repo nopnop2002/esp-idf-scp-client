@@ -1,10 +1,10 @@
-/* SCP read Example
+/* SCP Example
 
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
+	 This example code is in the Public Domain (or CC0 licensed, at your option.)
 
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
+	 Unless required by applicable law or agreed to in writing, this
+	 software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+	 CONDITIONS OF ANY KIND, either express or implied.
 */
 #include <string.h>
 #include <sys/types.h>
@@ -20,6 +20,7 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#include "netdb.h" // gethostbyname
 #include "nvs_flash.h"
 
 #include "lwip/err.h"
@@ -42,7 +43,7 @@ static EventGroupHandle_t s_wifi_event_group;
  * - we are connected to the AP with an IP
  * - we failed to connect after the maximum amount of retries */
 #define WIFI_CONNECTED_BIT BIT0
-#define WIFI_FAIL_BIT	   BIT1
+#define WIFI_FAIL_BIT BIT1
 
 static const char *TAG = "MAIN";
 
@@ -85,15 +86,15 @@ void wifi_init_sta(void)
 	esp_event_handler_instance_t instance_any_id;
 	esp_event_handler_instance_t instance_got_ip;
 	ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-														ESP_EVENT_ANY_ID,
-														&event_handler,
-														NULL,
-														&instance_any_id));
+									ESP_EVENT_ANY_ID,
+									&event_handler,
+									NULL,
+									&instance_any_id));
 	ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
-														IP_EVENT_STA_GOT_IP,
-														&event_handler,
-														NULL,
-														&instance_got_ip));
+									IP_EVENT_STA_GOT_IP,
+									&event_handler,
+									NULL,
+									&instance_got_ip));
 
 	wifi_config_t wifi_config = {
 		.sta = {
@@ -102,7 +103,7 @@ void wifi_init_sta(void)
 			/* Setting a password implies station will connect to all security modes including WEP/WPA.
 			 * However these modes are deprecated and not advisable to be used. Incase your Access point
 			 * doesn't support WPA2, these mode can be enabled by commenting below line */
-		 .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+			.threshold.authmode = WIFI_AUTH_WPA2_PSK,
 
 			.pmf_cfg = {
 				.capable = true,
@@ -119,19 +120,17 @@ void wifi_init_sta(void)
 	/* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
 	 * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
 	EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
-			WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-			pdFALSE,
-			pdFALSE,
-			portMAX_DELAY);
+		WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+		pdFALSE,
+		pdFALSE,
+		portMAX_DELAY);
 
 	/* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
 	 * happened. */
 	if (bits & WIFI_CONNECTED_BIT) {
-		ESP_LOGI(TAG, "connected to ap SSID:%s",
-				 CONFIG_ESP_WIFI_SSID);
+		ESP_LOGI(TAG, "connected to ap SSID:%s", CONFIG_ESP_WIFI_SSID);
 	} else if (bits & WIFI_FAIL_BIT) {
-		ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
-				 CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
+		ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
 	} else {
 		ESP_LOGE(TAG, "UNEXPECTED EVENT");
 	}
@@ -147,14 +146,13 @@ void app_main(void)
 	//Initialize NVS
 	esp_err_t ret = nvs_flash_init();
 	if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-	  ESP_ERROR_CHECK(nvs_flash_erase());
-	  ret = nvs_flash_init();
+		ESP_ERROR_CHECK(nvs_flash_erase());
+		ret = nvs_flash_init();
 	}
 	ESP_ERROR_CHECK(ret);
 
 	ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
 	wifi_init_sta();
-
 
 	// SSH Staff
 	int sock;
@@ -172,27 +170,38 @@ void app_main(void)
 		while(1) { vTaskDelay(1); }
 	}
 
-	/* Ultra basic "connect to port 22 on localhost"
-	 * Your code is responsible for creating the socket establishing the
-	 * connection
-	 */
+	ESP_LOGI(TAG, "CONFIG_SSH_HOST=%s", CONFIG_SSH_HOST);
+	ESP_LOGI(TAG, "CONFIG_SSH_PORT=%d", CONFIG_SSH_PORT);
+	sin.sin_family = AF_INET;
+	//sin.sin_port = htons(22);
+	sin.sin_port = htons(CONFIG_SSH_PORT);
+	sin.sin_addr.s_addr = inet_addr(CONFIG_SSH_HOST);
+	ESP_LOGI(TAG, "sin.sin_addr.s_addr=%x", sin.sin_addr.s_addr);
+	if (sin.sin_addr.s_addr == 0xffffffff) {
+		struct hostent *hp;
+		hp = gethostbyname(CONFIG_SSH_HOST);
+		if (hp == NULL) {
+			ESP_LOGE(TAG, "gethostbyname fail %s", CONFIG_SSH_HOST);
+			while(1) { vTaskDelay(1); }
+		}
+		struct ip4_addr *ip4_addr;
+		ip4_addr = (struct ip4_addr *)hp->h_addr;
+		sin.sin_addr.s_addr = ip4_addr->addr;
+		ESP_LOGI(TAG, "sin.sin_addr.s_addr=%x", sin.sin_addr.s_addr);
+	}
+
 	sock = socket(AF_INET, SOCK_STREAM, 0);
-	if(-1 == sock) {
+	if(sock == -1) {
 		ESP_LOGE(TAG, "failed to create socket!");
 		while(1) { vTaskDelay(1); }
 	}
 
-	sin.sin_family = AF_INET;
-	sin.sin_port = htons(22);
-	sin.sin_addr.s_addr = inet_addr(CONFIG_SSH_HOST);
-	if(connect(sock, (struct sockaddr*)(&sin),
-			   sizeof(struct sockaddr_in)) != 0) {
+	if(connect(sock, (struct sockaddr*)(&sin), sizeof(struct sockaddr_in)) != 0) {
 		ESP_LOGE(TAG, "failed to connect!");
 		while(1) { vTaskDelay(1); }
 	}
 
-	/* Create a session instance
-	 */
+	/* Create a session instance */
 	session = libssh2_session_init();
 	if(!session) {
 		ESP_LOGE(TAG, "failed to session init");
@@ -263,8 +272,7 @@ void app_main(void)
 	channel = NULL;
 
 	// Close a session
-	libssh2_session_disconnect(session,
-							   "Normal Shutdown, Thank you for playing");
+	libssh2_session_disconnect(session, "Normal Shutdown, Thank you for playing");
 	libssh2_session_free(session);
 
 	// Close socket
