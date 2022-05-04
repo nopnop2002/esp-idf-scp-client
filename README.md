@@ -24,11 +24,12 @@ idf.py flash
 # Configuration   
 
 ![config-main](https://user-images.githubusercontent.com/6020549/119904361-33782700-bf85-11eb-8a90-c5f05ac83f87.jpg)
-![config-listdir](https://user-images.githubusercontent.com/6020549/119904366-3541ea80-bf85-11eb-9f85-90f93d144a35.jpg)
+![config-listdir](https://user-images.githubusercontent.com/6020549/166656776-74668eae-a92d-4acd-8d4f-ca2eca964579.jpg)
 
 # API   
 https://www.libssh2.org/docs.html
 
+You can use these APIs to work with remote files and directories.   
 ```
 libssh2_sftp_close()
 libssh2_sftp_close_handle()
@@ -96,7 +97,9 @@ Unlink a file using ssh connection
 https://github.com/nopnop2002/esp-idf-ssh-client
 
 You can use scp and ssh to do heavy processing that esp32 alone cannot.  
-- Execute server-side command with ssh.   
-- Output the processing result to a file.   
-- Copy file from server using scp-get.   
+For example, image processing:   
+- Copy file from esp32 to remote using scp-put.   
+- Execute remote command using ssh-client.   
+- The processing result is redirected to a file.   
+- Copy file from remote to esp32 using scp-get.   
 
