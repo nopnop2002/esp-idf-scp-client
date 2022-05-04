@@ -1,5 +1,6 @@
 # esp-idf-scp-client
 scp client example for esp-idf.   
+You can use the scp API to work with remote files and directories.   
 This project use [this](https://github.com/libssh2/libssh2) ssh library.   
 
 # Software requirements
