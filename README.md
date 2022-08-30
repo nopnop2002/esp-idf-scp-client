@@ -106,5 +106,5 @@ You can use scp and ssh to do heavy processing that esp32 alone cannot.
 For example, image processing:   
 - Take a picture using the esp32-cam.   
 - Send image files to remote using scp-put.   
-- Image processing such as shading is performed on the remote side using scp-client.   
+- Image processing such as shading is performed on the remote side using ssh-client.   
 - Receive image file from remote using scp-get.   
