@@ -4,9 +4,9 @@ You can use the ssh API to work with remote files and directories.
 This project use [this](https://github.com/libssh2/libssh2) ssh library.   
 
 # Software requirements
-esp-idf v4.4   
-This is because this version supports ESP32-S3 and uses mbed TLS 2.16.11.   
-ESP-IDF Ver5 updated from mbed TSL 2.16.11 to mbed TLS 3.1.0, but [this](https://github.com/libssh2/libssh2) ssh library does not support mbed TLS 3.1.0.
+ESP-IDF Ver4.4   
+This is because this version supports ESP32-S3 and uses mbed TLS 2.28.1.   
+ESP-IDF Ver5 updated to mbed TLS 3.x.x, but [this](https://github.com/libssh2/libssh2) ssh library does not support mbed TLS 3.x.x.   
 
 # Installation
 
