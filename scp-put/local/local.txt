@@ -3,4 +3,4 @@ The ESP32 copied the file using scp to remote.
 Main project:
 https://github.com/nopnop2002/esp-idf-scp-client
 Library:
-https://github.com/libssh2/libssh2
+https://gitlab.com/ch405labs/ch405labs_esp_libssh2

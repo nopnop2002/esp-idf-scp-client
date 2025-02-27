@@ -1,16 +1,18 @@
-/* SCP Example
+/*	scp Client Example
 
-	 This example code is in the Public Domain (or CC0 licensed, at your option.)
+	This example code is in the Public Domain (or CC0 licensed, at your option.)
 
-	 Unless required by applicable law or agreed to in writing, this
-	 software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-	 CONDITIONS OF ANY KIND, either express or implied.
+	Unless required by applicable law or agreed to in writing, this
+	software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+	CONDITIONS OF ANY KIND, either express or implied.
 */
+
+#include <stdio.h>
+#include <inttypes.h>
 #include <string.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <stdio.h>
 #include <ctype.h>
 
 #include "freertos/FreeRTOS.h"
@@ -35,7 +37,6 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 
-
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
 
@@ -49,8 +50,7 @@ static const char *TAG = "MAIN";
 
 static int s_retry_num = 0;
 
-static void event_handler(void* arg, esp_event_base_t event_base,
-								int32_t event_id, void* event_data)
+static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
 {
 	if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
 		esp_wifi_connect();
@@ -71,12 +71,11 @@ static void event_handler(void* arg, esp_event_base_t event_base,
 	}
 }
 
-void wifi_init_sta(void)
+esp_err_t wifi_init_sta(void)
 {
 	s_wifi_event_group = xEventGroupCreate();
 
 	ESP_ERROR_CHECK(esp_netif_init());
-
 	ESP_ERROR_CHECK(esp_event_loop_create_default());
 	esp_netif_create_default_wifi_sta();
 
@@ -86,15 +85,15 @@ void wifi_init_sta(void)
 	esp_event_handler_instance_t instance_any_id;
 	esp_event_handler_instance_t instance_got_ip;
 	ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-									ESP_EVENT_ANY_ID,
-									&event_handler,
-									NULL,
-									&instance_any_id));
+		ESP_EVENT_ANY_ID,
+		&event_handler,
+		NULL,
+		&instance_any_id));
 	ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
-									IP_EVENT_STA_GOT_IP,
-									&event_handler,
-									NULL,
-									&instance_got_ip));
+		IP_EVENT_STA_GOT_IP,
+		&event_handler,
+		NULL,
+		&instance_got_ip));
 
 	wifi_config_t wifi_config = {
 		.sta = {
@@ -111,14 +110,14 @@ void wifi_init_sta(void)
 			},
 		},
 	};
-	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
-	ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
-	ESP_ERROR_CHECK(esp_wifi_start() );
-
-	ESP_LOGI(TAG, "wifi_init_sta finished.");
+	ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
+	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+	ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+	ESP_ERROR_CHECK(esp_wifi_start());
 
 	/* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
 	 * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
+	esp_err_t ret_value = ESP_OK;
 	EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
 		WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
 		pdFALSE,
@@ -131,19 +130,22 @@ void wifi_init_sta(void)
 		ESP_LOGI(TAG, "connected to ap SSID:%s", CONFIG_ESP_WIFI_SSID);
 	} else if (bits & WIFI_FAIL_BIT) {
 		ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
+		ret_value = ESP_FAIL;
 	} else {
 		ESP_LOGE(TAG, "UNEXPECTED EVENT");
+		ret_value = ESP_FAIL;
 	}
 
 	/* The event will not be processed after unregister */
 	ESP_ERROR_CHECK(esp_event_handler_instance_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, instance_got_ip));
 	ESP_ERROR_CHECK(esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, instance_any_id));
 	vEventGroupDelete(s_wifi_event_group);
+	return ret_value;
 }
 
 void app_main(void)
 {
-	//Initialize NVS
+	// Initialize NVS
 	esp_err_t ret = nvs_flash_init();
 	if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
 		ESP_ERROR_CHECK(nvs_flash_erase());
@@ -151,8 +153,8 @@ void app_main(void)
 	}
 	ESP_ERROR_CHECK(ret);
 
-	ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
-	wifi_init_sta();
+	// Initialize WiFi
+	ESP_ERROR_CHECK(wifi_init_sta());
 
 	// SSH Staff
 	int sock;
@@ -170,24 +172,26 @@ void app_main(void)
 		while(1) { vTaskDelay(1); }
 	}
 
-	ESP_LOGI(TAG, "CONFIG_SSH_HOST=%s", CONFIG_SSH_HOST);
-	ESP_LOGI(TAG, "CONFIG_SSH_PORT=%d", CONFIG_SSH_PORT);
+	ESP_LOGD(TAG, "CONFIG_SSH_HOST=%s", CONFIG_SSH_HOST);
+	ESP_LOGD(TAG, "CONFIG_SSH_PORT=%d", CONFIG_SSH_PORT);
 	sin.sin_family = AF_INET;
 	//sin.sin_port = htons(22);
 	sin.sin_port = htons(CONFIG_SSH_PORT);
 	sin.sin_addr.s_addr = inet_addr(CONFIG_SSH_HOST);
-	ESP_LOGI(TAG, "sin.sin_addr.s_addr=%x", sin.sin_addr.s_addr);
+	ESP_LOGD(TAG, "sin.sin_addr.s_addr=%"PRIx32, sin.sin_addr.s_addr);
 	if (sin.sin_addr.s_addr == 0xffffffff) {
 		struct hostent *hp;
 		hp = gethostbyname(CONFIG_SSH_HOST);
 		if (hp == NULL) {
-			ESP_LOGE(TAG, "gethostbyname fail %s", CONFIG_SSH_HOST);
+			ESP_LOGE(TAG, "gethostbyname fail");
+			ESP_LOGE(TAG, "CONFIG_SSH_HOST=%s", CONFIG_SSH_HOST);
+			ESP_LOGE(TAG, "CONFIG_SSH_PORT=%d", CONFIG_SSH_PORT);
 			while(1) { vTaskDelay(1); }
 		}
 		struct ip4_addr *ip4_addr;
 		ip4_addr = (struct ip4_addr *)hp->h_addr;
 		sin.sin_addr.s_addr = ip4_addr->addr;
-		ESP_LOGI(TAG, "sin.sin_addr.s_addr=%x", sin.sin_addr.s_addr);
+		ESP_LOGD(TAG, "sin.sin_addr.s_addr=%"PRIx32, sin.sin_addr.s_addr);
 	}
 
 	sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -198,6 +202,8 @@ void app_main(void)
 
 	if(connect(sock, (struct sockaddr*)(&sin), sizeof(struct sockaddr_in)) != 0) {
 		ESP_LOGE(TAG, "failed to connect!");
+		ESP_LOGE(TAG, "CONFIG_SSH_HOST=%s", CONFIG_SSH_HOST);
+		ESP_LOGE(TAG, "CONFIG_SSH_PORT=%d", CONFIG_SSH_PORT);
 		while(1) { vTaskDelay(1); }
 	}
 
