@@ -13,8 +13,9 @@ idf.py flash
 ![Image](https://github.com/user-attachments/assets/66065823-190b-4143-9234-abf823193fd4)
 
 
-# How to Set Up an SFTP Server on Linux
-I built SFTP Server according to [this](https://www.techrepublic.com/article/how-to-set-up-an-sftp-server-on-linux/).   
+# How to Set Up a file transfer-only users   
+All Linux users accept the sftp protocol.   
+Following [this](https://www.techrepublic.com/article/how-to-set-up-an-sftp-server-on-linux/) tutorial, you can create a dedicated user for sftp.   
 
 
 # API   
