@@ -17,7 +17,7 @@ idf.py flash
 I built SFTP Serve according to [this](https://www.techrepublic.com/article/how-to-set-up-an-sftp-server-on-linux/).   
 
 
-# SFTP API   
+# API   
 https://www.libssh2.org/docs.html
 
 You can use these APIs to work with remote files and directories.   
