@@ -14,7 +14,7 @@ idf.py flash
 
 
 # How to Set Up an SFTP Server on Linux
-I built SFTP Serve according to [this](https://www.techrepublic.com/article/how-to-set-up-an-sftp-server-on-linux/).   
+I built SFTP Server according to [this](https://www.techrepublic.com/article/how-to-set-up-an-sftp-server-on-linux/).   
 
 
 # API   
