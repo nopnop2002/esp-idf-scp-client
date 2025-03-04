@@ -21,6 +21,7 @@ I built SFTP Server according to [this](https://www.techrepublic.com/article/how
 https://www.libssh2.org/docs.html
 
 You can use these APIs to work with remote files and directories.   
+SFTP's API is similar to the poxis file system API.   
 ```
 libssh2_sftp_close()
 libssh2_sftp_close_handle()
