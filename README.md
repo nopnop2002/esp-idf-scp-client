@@ -88,6 +88,9 @@ Put to a file using ssh connection
 - scp-unlink   
 Unlink a file using ssh connection
 
+- sftp-client   
+Unlink a file using ssh connection
+
 # Reference
 https://github.com/nopnop2002/esp-idf-ssh-client
 
