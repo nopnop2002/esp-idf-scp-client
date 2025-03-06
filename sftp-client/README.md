@@ -1,5 +1,5 @@
 # sftp-client
-Reading and writing files using sftp protocol
+Reading and writing files using sftp API
 
 # Installation
 
