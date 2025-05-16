@@ -1,8 +1,10 @@
 # esp-idf-scp-client
 scp client example for esp-idf.   
 You can use the ssh API to work with remote files and directories.   
-This project use [this](https://gitlab.com/ch405labs/ch405labs_esp_libssh2) ssh library.   
+This project use [this](https://gitlab.com/ch405labs/ch405labs_esp_libssh2) libssh2 library.   
 This is great work.   
+libssh2 is a client-side C library implementing the SSH2 protocol.   
+Capabilities and Features is [here](https://libssh2.org/).   
 
 # Software requirements
 ESP-IDF V5.0 or later.   
